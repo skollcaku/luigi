@@ -1,17 +1,11 @@
 import abc
-<<<<<<< HEAD
 import json
-=======
->>>>>>> c84d55d189b5e270f123718cdd12f325e91b2e91
 import logging
 import luigi.postgres
 import luigi
 from luigi.contrib import rdbms
 from luigi import postgres
-<<<<<<< HEAD
 from luigi.s3 import S3PathTask, S3Target
-=======
->>>>>>> c84d55d189b5e270f123718cdd12f325e91b2e91
 
 logger = logging.getLogger('luigi-interface')
 
@@ -168,5 +162,3 @@ class RedshiftManifestTask(S3PathTask):
         target = self.output().open('w')
         target.write(json.dumps(manifest))
         target.close()
-=======
->>>>>>> c84d55d189b5e270f123718cdd12f325e91b2e91
