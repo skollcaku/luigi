@@ -26,6 +26,8 @@ import luigi.notifications
 from helpers import with_config, LuigiTestCase
 from luigi.mock import MockTarget, MockFileSystem
 from luigi.parameter import ParameterException
+from luigi.scheduler import CentralPlannerScheduler
+from luigi.worker import Worker
 from worker_test import email_patch
 
 luigi.notifications.DEBUG = True
@@ -633,6 +635,48 @@ class OverrideEnvStuff(unittest.TestCase):
     def testOverrideSchedulerPort3(self):
         env_params = luigi.interface.core()
         self.assertEqual(env_params.scheduler_port, 6545)
+
+
+class ForNone(luigi.Task):
+    p = luigi.Parameter(default=None)
+    has_run = False
+
+    def run(self):
+        if self.p == 'None':
+            raise Exception("None was passed as string 'None'")
+        self.has_run = True
+
+    def complete(self):
+        return self.has_run
+
+class AForNone(ForNone):
+    method = luigi.Parameter()
+
+class BForNoneYieldVersion(ForNone):
+    def run(self):
+        yield AForNone(p=None, method='yield')
+
+    def requires(self):
+        return []
+
+class BForNoneRequiresVersion(ForNone):
+    def requires(self):
+        return [AForNone(p=None, method='requires')]
+
+
+class NoneParameterPassed(unittest.TestCase):
+
+    def test_none_parameter_with_yield(self):
+        w = Worker()
+        w.add(BForNoneYieldVersion())
+        w.run()
+        self.assertTrue(w.run_succeeded)
+
+    def test_none_parameter_with_requires(self):
+        w = Worker()
+        w.add(BForNoneRequiresVersion())
+        w.run()
+        self.assertTrue(w.run_succeeded)
 
 
 if __name__ == '__main__':
